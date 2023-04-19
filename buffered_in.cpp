@@ -3,20 +3,31 @@
 #include <initializer_list>
 
 namespace Buffered {
-    class Digital {
-    private:
-        DigitalIn in;
-
+    template <class In, class Data>
+    class InputRead {
     public:
-        Digital(DigitalIn in) : in(in) {
-
-        }
+        template <class Ret>
+        operator Ret();
+        InputRead(In in) : in(in) {}
+    protected:
+        In in;
+        Data data;
     };
 
+    class Digital : public InputRead<DigitalIn, int> {
+    public:
+        using InputRead::InputRead;
+    };
+
+    class Analog : public InputRead<AnalogIn, float> {
+    public:
+    };
+
+    template<class T>
     class Bus {
     private:
-        std::vector<Digital> list;
+        std::vector<T> list;
     public:
-        Bus(std::initializer_list<Digital> list) : list(list) {}
+        Bus(std::initializer_list<T> list) : list(list) {}
     };
 }
