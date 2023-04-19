@@ -21,7 +21,7 @@ void on_receive() {
 int main()
 {
     Buffered::Digital p = pin;
-    Buffered::Bus bus {pin1, pin};
+    Buffered::Bus<Buffered::Digital> bus {pin1, pin};
 
     while (true) {
 
