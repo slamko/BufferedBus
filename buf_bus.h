@@ -18,21 +18,58 @@ namespace Buffered {
     class Digital : public InputRead<DigitalIn, int> {
     public:
         using InputRead::InputRead;
-        void read(bool inverse_read) override;
+        void read(bool inverse_read = false) override;
     };
 
     class Analog : public InputRead<AnalogIn, float> {
     public:
         using InputRead::InputRead;
-        void read(bool inverse_read) override;
+        void read(bool inverse_read = false) override;
     };
 
-    template<class T>
+    template<class T, size_t N>
     class Bus {
     private:
-        std::vector<T> list;
+
     public:
-        Bus(std::initializer_list<T> list);
+        std::array<T, N> list;
+
+        template <class... PT>
+        Bus(PT... list);
+        template <size_t I>
+        T& get();
+        T& operator [](size_t index);
         void read();
     };
+
+
+    template <class In, class Data>
+    InputRead<In, Data>::InputRead(In in) : in(in) {}
+
+    template <class In, class Data>
+    InputRead<In, Data>::operator Data() {
+        return data;
+    }
+
+    template <class T, size_t N>
+    template <class... PT>
+    Bus<T, N>::Bus(PT... list) : list {list...} {}
+
+    template <class T, size_t N>
+    T& Bus<T, N>::operator [](size_t index) {
+        return this->list.at(index);
+    }
+
+    template <class T, size_t N>
+    void Bus<T, N>::read() {
+        for (auto in : list) {
+            in.read();
+        }
+    }
+
+    template <class T, size_t N>
+    template <size_t I>
+    T& Bus<T, N>::get() {
+        return std::get<I>(list);
+    }
 }

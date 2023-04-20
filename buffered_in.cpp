@@ -4,18 +4,7 @@
 #include "buf_bus.h"
 
 namespace Buffered {
-    template <class In, class Data>
-    InputRead<In, Data>::InputRead(In in) : in(in) {}
-
-    template <class In, class Data>
-    InputRead<In, Data>::operator Data() {
-        return data;
-    }
-
-    template <class T>
-    Bus<T>::Bus(std::initializer_list<T> list) : list(list) {}
-
-    void Digital::read(bool inverse_read = false) {
+    void Digital::read(bool inverse_read) {
         if (inverse_read) {
             data = !in.read();
         } else {
@@ -23,7 +12,7 @@ namespace Buffered {
         }
     }
 
-    void Analog::read(bool inverse_read = false) {
+    void Analog::read(bool inverse_read) {
         if (inverse_read) {
             data = (1.0f - in.read());
         } else {
