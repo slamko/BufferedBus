@@ -30,10 +30,8 @@ namespace Buffered {
     template<class T, size_t N>
     class Bus {
     private:
-
-    public:
         std::array<T, N> list;
-
+    public:
         template <class... PT>
         Bus(PT... list);
         template <size_t I>
@@ -72,4 +70,10 @@ namespace Buffered {
     T& Bus<T, N>::get() {
         return std::get<I>(list);
     }
+
+    template <size_t N>
+    using DBus = Bus<Digital, N>;
+
+    template <size_t N>
+    using ABus = Bus<Analog, N>;
 }

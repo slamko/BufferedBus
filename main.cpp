@@ -28,12 +28,11 @@ void on_receive() {
 
 int main()
 {
-    Buffered::Bus<Buffered::Digital, 4> dbus {pin1, pin2, pin3, pin4};
-    Buffered::Bus<Buffered::Analog, 4> abus {pin5, pin6, pin7, pin8};
+    Buffered::DBus<4> dbus {pin1, pin2, pin3, pin4};
+    Buffered::ABus<4> abus {pin5, pin6, pin7, pin8};
     dbus.read();
 
     while (true) {
-        
         int d = dbus.get<3>();
         float a = abus[4];
 
