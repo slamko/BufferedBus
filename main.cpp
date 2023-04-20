@@ -28,12 +28,16 @@ void on_receive() {
 
 int main()
 {
+    Buffered::Digital digit = pin1;
     Buffered::DBus<4> dbus {pin1, pin2, pin3, pin4};
     Buffered::ABus<4> abus {pin5, pin6, pin7, pin8};
-    dbus.read();
+
+    digit.read();
+    dbus.read(true);
 
     while (true) {
-        int d = dbus.get<3>();
+        int d = dbus.get<4>();
+        int d2 = digit;
         float a = abus[4];
 
         ThisThread::sleep_for(100ms);

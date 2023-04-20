@@ -1,7 +1,4 @@
 #include "mbed.h"
-#include <vector>
-#include <array>
-#include <initializer_list>
 
 namespace Buffered {
     template <class In, class Data>
@@ -9,9 +6,13 @@ namespace Buffered {
     public:
         virtual void read(bool inverse_read) = 0;
         operator Data();
-        InputRead(In in);
+        InputRead(In& in);
+
+        InputRead(const InputRead&) = delete;
+        InputRead& operator =(const InputRead&) = delete;
+        
     protected:
-        In in;
+        In& in;
         Data data;
     };
 
@@ -30,19 +31,18 @@ namespace Buffered {
     template<class T, size_t N>
     class Bus {
     private:
-        std::array<T, N> list;
+        T list[N];
     public:
         template <class... PT>
-        Bus(PT... list);
+        Bus(PT &... list);
         template <size_t I>
         T& get();
         T& operator [](size_t index);
-        void read();
+        void read(bool inverse_read = false);
     };
 
-
     template <class In, class Data>
-    InputRead<In, Data>::InputRead(In in) : in(in) {}
+    InputRead<In, Data>::InputRead(In &in) : in(in) {}
 
     template <class In, class Data>
     InputRead<In, Data>::operator Data() {
@@ -51,24 +51,26 @@ namespace Buffered {
 
     template <class T, size_t N>
     template <class... PT>
-    Bus<T, N>::Bus(PT... list) : list {list...} {}
+    Bus<T, N>::Bus(PT &... list) : list {list...} {}
 
     template <class T, size_t N>
     T& Bus<T, N>::operator [](size_t index) {
-        return this->list.at(index);
+        return this->list[index];
     }
 
     template <class T, size_t N>
-    void Bus<T, N>::read() {
+    void Bus<T, N>::read(bool inverse_read) {
         for (auto in : list) {
-            in.read();
+            in.read(inverse_read);
         }
     }
 
     template <class T, size_t N>
     template <size_t I>
     T& Bus<T, N>::get() {
-        return std::get<I>(list);
+        static_assert(I < N, "out of bound");
+
+        return list[I];
     }
 
     template <size_t N>
