@@ -1,3 +1,6 @@
+#ifndef CACHE_BUS_H
+#define CACHE_BUS_H
+
 #include "mbed.h"
 #include <initializer_list>
 
@@ -132,3 +135,5 @@ namespace Cached {
     template <size_t N>
     using ABus = Bus<Analog, N>;
 }
+
+#endif // CACHE_BUS_H
