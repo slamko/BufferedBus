@@ -4,7 +4,7 @@
  */
 
 #include "mbed.h"
-#include "buf_bus.h"
+#include "cache_bus.h"
 
 // Blinking rate in milliseconds
 #define BLINKING_RATE     100ms
@@ -28,9 +28,9 @@ void on_receive() {
 
 int main()
 {
-    Buffered::Digital digit = pin1;
-    Buffered::DBus<4> dbus {pin1, pin2, pin3, pin4};
-    Buffered::ABus<4> abus {pin5, pin6, pin7, pin8};
+    Cached::Digital digit = pin1;
+    Cached::DBus<4> dbus {pin1, pin2, pin3, pin4};
+    Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
 
     digit.read();   //  updating cached value
     dbus.read_all(); // updating cached values for the hole bus

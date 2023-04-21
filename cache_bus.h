@@ -1,7 +1,9 @@
 #include "mbed.h"
-#include <array>
+#include <initializer_list>
 
-namespace Buffered {
+namespace Cached {
+    #define OUT_OF_BOUNDS_ERROR "error: Bus index out of bounds"
+
     template <class In, class Data>
     class InputRead {
     public:
@@ -54,6 +56,8 @@ namespace Buffered {
 
         template <size_t I, size_t In, size_t ...Index>
         void read(bool inverse_read = false);
+
+        void read(std::initializer_list<size_t> ids, bool inverse_read = false);
     };
 
     template <class In, class Data>
@@ -70,6 +74,12 @@ namespace Buffered {
 
     template <class T, size_t N>
     auto Bus<T, N>::operator [](size_t index) {
+        if (index >= N) {
+            #if __cpp_exceptions 
+            //    throw OUT_OF_BOUNDS_ERROR;
+            #endif
+        }
+        
         return this->list[index].read_cached();
     }
 
@@ -83,17 +93,37 @@ namespace Buffered {
     template <class T, size_t N>
     template <size_t I>
     auto Bus<T, N>::get() {
-        static_assert(I < N, "out of bound");
+        static_assert(I < N, OUT_OF_BOUNDS_ERROR);
 
         return list[I].read_cached();
     }
 
     template <class T, size_t N>
+    template <size_t I>
+    void Bus<T, N>::read(bool inverse_read) {
+        static_assert(I < N, OUT_OF_BOUNDS_ERROR);
+        this->list[I].read(inverse_read);
+    }
+
+    template <class T, size_t N>
     template <size_t I, size_t In, size_t ...Index>
     void Bus<T, N>::read(bool inverse_read) {
-        static_assert(I < N, "out of bound");
+        static_assert(I < N, OUT_OF_BOUNDS_ERROR);
         this->list[I].read(inverse_read);
         read<In, Index...>();
+    }
+
+    template <class T, size_t N>
+    void Bus<T, N>::read(std::initializer_list<size_t> ids, bool inverse_read) {
+        for (auto id : ids) {
+            if (id >= N) {
+                #if __cpp_exceptions 
+                //    throw OUT_OF_BOUNDS_ERROR;
+                #endif
+            }
+
+            this->list[id].read(inverse_read);
+        }
     }
 
     template <size_t N>

@@ -1,9 +1,9 @@
 #include "mbed.h"
 #include <vector>
 #include <initializer_list>
-#include "buf_bus.h"
+#include "cache_bus.h"
 
-namespace Buffered {
+namespace Cached {
     void Digital::read(bool inverse_read) {
         if (inverse_read) {
             data = !in.read();
