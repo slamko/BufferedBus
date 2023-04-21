@@ -1,11 +1,11 @@
-#ifndef CACHE_BUS_H
-#define CACHE_BUS_H
+#ifndef CACHE_VAR_VBus_H
+#define CACHE_VAR_VBus_H
 
 #include "mbed.h"
-#include <initializer_list>
+#include <tuple>
 
 namespace Cached {
-    #define OUT_OF_BOUNDS_ERROR "error: Bus index out of bounds"
+    #define OUT_OF_BOUNDS_ERROR "error: VBus index out of bounds"
 
     template <class In, class Data>
     class InputRead {
@@ -37,6 +37,8 @@ namespace Cached {
         using InputRead::InputRead;
         void read(bool inverse_read = false) override;
     };
+
+
 
     template<class T, size_t N>
     class Bus : private NonCopyable<Bus<T, N>> {
@@ -134,6 +136,56 @@ namespace Cached {
 
     template <size_t N>
     using ABus = Bus<Analog, N>;
+
+
+    template<class ...T>
+    class VBus : private NonCopyable<VBus<T...>> {
+    private:
+        std::tuple<T...> list;
+
+    public:
+        template <class ...PT>
+        VBus(PT &... list);
+
+        template <size_t I>
+        auto get();
+
+        void read_all(bool inverse_read = false);
+
+        template <size_t I>
+        void read(bool inverse_read = false);
+
+        template <size_t I, size_t In, size_t ...Index>
+        void read(bool inverse_read = false);
+    };
+
+    template <class ...T>
+    template <class ...PT>
+    VBus<T...>::VBus(PT &...list) : list {list...} {}
+
+    template <class ...T>
+    void VBus<T...>::read_all(bool inverse_read) {
+        read<std::tuple_size<decltype(list)>::value - 1>();
+    }
+
+    template <class ...T>
+    template <size_t I>
+    auto VBus<T...>::get() {
+        return std::get<I>(list).read_cached();
+    }
+
+    template <class ...T>
+    template <size_t I>
+    void VBus<T...>::read(bool inverse_read) {
+        std::get<I>(list).read(inverse_read);
+    }
+
+    template <class ...T>
+    template <size_t I, size_t In, size_t ...Index>
+    void VBus<T...>::read(bool inverse_read) {
+        std::get<I>(list).read(inverse_read);
+        read<In, Index...>();
+    }
 }
 
-#endif // CACHE_BUS_H
+#endif // CACHE_VAR_VBus_H
