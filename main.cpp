@@ -32,13 +32,17 @@ int main()
     Buffered::DBus<4> dbus {pin1, pin2, pin3, pin4};
     Buffered::ABus<4> abus {pin5, pin6, pin7, pin8};
 
-    digit.read();
-    dbus.read(true);
+    digit.read();   //  updating cached value
+    dbus.read_all(); // updating cached values for the hole bus
 
     while (true) {
-        int d = dbus.get<4>();
-        int d2 = digit;
-        float a = abus[4];
+        dbus.read<2, 3>();
+
+        int d = dbus.get<3>();  // reads cached value
+        int d2 = digit;         // reads cached value
+
+        // float a = abus[4];           // no bound checking, undefined behaviour
+        // float a2 = abus.get<4>();    // compile time error: array index out of bound
 
         ThisThread::sleep_for(100ms);
         led = !led;

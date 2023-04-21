@@ -1,15 +1,20 @@
 #include "mbed.h"
+#include <array>
 
 namespace Buffered {
     template <class In, class Data>
     class InputRead {
     public:
         virtual void read(bool inverse_read) = 0;
-        operator Data();
-        InputRead(In& in);
 
-        InputRead(const InputRead&) = delete;
-        InputRead& operator =(const InputRead&) = delete;
+        operator Data();
+
+        Data read_cached() {
+            return data;
+        }
+
+        InputRead(In& in);
+        InputRead& operator =(const InputRead&) = delete; 
         
     protected:
         In& in;
@@ -29,15 +34,25 @@ namespace Buffered {
     };
 
     template<class T, size_t N>
-    class Bus {
+    class Bus : private NonCopyable<Bus<T, N>> {
     private:
         T list[N];
+
     public:
         template <class... PT>
         Bus(PT &... list);
+
         template <size_t I>
-        T& get();
-        T& operator [](size_t index);
+        auto get();
+
+        auto operator [](size_t index);
+
+        void read_all(bool inverse_read = false);
+
+        template <size_t I>
+        void read(bool inverse_read = false);
+
+        template <size_t I, size_t In, size_t ...Index>
         void read(bool inverse_read = false);
     };
 
@@ -54,23 +69,31 @@ namespace Buffered {
     Bus<T, N>::Bus(PT &... list) : list {list...} {}
 
     template <class T, size_t N>
-    T& Bus<T, N>::operator [](size_t index) {
-        return this->list[index];
+    auto Bus<T, N>::operator [](size_t index) {
+        return this->list[index].read_cached();
     }
 
     template <class T, size_t N>
-    void Bus<T, N>::read(bool inverse_read) {
-        for (auto in : list) {
+    void Bus<T, N>::read_all(bool inverse_read) {
+        for (auto &in : list) {
             in.read(inverse_read);
         }
     }
 
     template <class T, size_t N>
     template <size_t I>
-    T& Bus<T, N>::get() {
+    auto Bus<T, N>::get() {
         static_assert(I < N, "out of bound");
 
-        return list[I];
+        return list[I].read_cached();
+    }
+
+    template <class T, size_t N>
+    template <size_t I, size_t In, size_t ...Index>
+    void Bus<T, N>::read(bool inverse_read) {
+        static_assert(I < N, "out of bound");
+        this->list[I].read(inverse_read);
+        read<In, Index...>();
     }
 
     template <size_t N>
