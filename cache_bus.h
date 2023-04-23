@@ -1,5 +1,5 @@
-#ifndef CACHE_VAR_VBus_H
-#define CACHE_VAR_VBus_H
+#ifndef CACHE_BUS_H
+#define CACHE_BUS_H
 
 #include "mbed.h"
 #include <tuple>
@@ -46,8 +46,8 @@ namespace Cached {
         T list[N];
 
     public:
-        template <class... PT>
-        Bus(PT &... list);
+        template <class ...PT>
+        Bus(PT& ...list);
 
         template <size_t I>
         auto get();
@@ -74,8 +74,8 @@ namespace Cached {
     }
 
     template <class T, size_t N>
-    template <class... PT>
-    Bus<T, N>::Bus(PT &... list) : list {list...} {}
+    template <class ...PT>
+    Bus<T, N>::Bus(PT& ...list) : list {list...} {}
 
     template <class T, size_t N>
     auto Bus<T, N>::operator [](size_t index) {
@@ -161,11 +161,11 @@ namespace Cached {
 
     template <class ...T>
     template <class ...PT>
-    VBus<T...>::VBus(PT &...list) : list {list...} {}
+    VBus<T...>::VBus(PT& ...list) : list {list...} {}
 
     template <class ...T>
     void VBus<T...>::read_all(bool inverse_read) {
-        read<std::tuple_size<decltype(list)>::value - 1>();
+        read<std::tuple_size<decltype(list)>::value - 1u>();
     }
 
     template <class ...T>
@@ -188,4 +188,4 @@ namespace Cached {
     }
 }
 
-#endif // CACHE_VAR_VBus_H
+#endif // CACHE_BUS_H
