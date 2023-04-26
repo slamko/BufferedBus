@@ -3,6 +3,7 @@
 
 #include "mbed.h"
 #include <tuple>
+#include <functional>
 
 namespace Cached {
     #define OUT_OF_BOUNDS_ERROR "error: VBus index out of bounds"
@@ -19,10 +20,13 @@ namespace Cached {
         }
 
         InputRead(In& in);
+        InputRead(const InputRead &) = delete;
         InputRead& operator =(const InputRead&) = delete; 
+
+        InputRead(InputRead &&) = default;
         
     protected:
-        In& in;
+        std::reference_wrapper<In> in;
         Data data;
     };
 
@@ -38,8 +42,6 @@ namespace Cached {
         void read(bool inverse_read = false) override;
     };
 
-
-
     template<class T, size_t N>
     class Bus : private NonCopyable<Bus<T, N>> {
     private:
@@ -47,7 +49,7 @@ namespace Cached {
 
     public:
         template <class ...PT>
-        Bus(PT& ...list);
+        Bus(PT&& ...list);
 
         template <size_t I>
         auto get();
@@ -75,7 +77,7 @@ namespace Cached {
 
     template <class T, size_t N>
     template <class ...PT>
-    Bus<T, N>::Bus(PT& ...list) : list {list...} {}
+    Bus<T, N>::Bus(PT&& ...list) : list {list...} {}
 
     template <class T, size_t N>
     auto Bus<T, N>::operator [](size_t index) {
@@ -137,15 +139,20 @@ namespace Cached {
     template <size_t N>
     using ABus = Bus<Analog, N>;
 
-
     template<class ...T>
-    class VBus : private NonCopyable<VBus<T...>> {
+    class VBus /*: private NonCopyable<VBus<T...>>*/ {
     private:
         std::tuple<T...> list;
 
     public:
         template <class ...PT>
-        VBus(PT &... list);
+        VBus(PT &&... list);
+
+        VBus(const VBus &) = delete;
+        VBus& operator =(const VBus &) = delete;
+        
+        VBus(VBus &&vbus) = default;
+        VBus& operator =(VBus &&vbus) = default;
 
         template <size_t I>
         auto get();
@@ -161,7 +168,7 @@ namespace Cached {
 
     template <class ...T>
     template <class ...PT>
-    VBus<T...>::VBus(PT& ...list) : list {list...} {}
+    VBus<T...>::VBus(PT &&...list) : list {list...} {}
 
     template <class ...T>
     void VBus<T...>::read_all(bool inverse_read) {
@@ -186,6 +193,30 @@ namespace Cached {
         std::get<I>(list).read(inverse_read);
         read<In, Index...>();
     }
+
+    template <class T>
+    struct assoc_type;
+
+    template <>
+    struct assoc_type<DigitalIn> {
+        using type = Digital;
+    };
+
+    template <>
+    struct assoc_type<AnalogIn> {
+        using type = Analog;
+    };
+
+    template <class T>
+    using assoc_type_t = typename assoc_type<T>::type;
+
+    template <class ...Args>
+    VBus<assoc_type_t<Args>...> make_vbus(Args &&...args) {
+        return VBus<assoc_type_t<Args>...>(args...);
+    }
+
+    using D = Digital;
+    using A = Analog;
 }
 
 #endif // CACHE_BUS_H

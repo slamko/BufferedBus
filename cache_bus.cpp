@@ -6,17 +6,17 @@
 namespace Cached {
     void Digital::read(bool inverse_read) {
         if (inverse_read) {
-            data = !in.read();
+            data = !in.get().read();
         } else {
-            data = in.read();
+            data = in.get().read();
         }
     }
 
     void Analog::read(bool inverse_read) {
         if (inverse_read) {
-            data = (1.0f - in.read());
+            data = (1.0f - in.get().read());
         } else {
-            data = in.read();
+            data = in.get().read();
         }
     }
 }

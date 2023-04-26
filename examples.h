@@ -14,30 +14,47 @@ AnalogIn pin7(PC_10);
 AnalogIn pin8(PC_9);
 
 using namespace Cached;
+VBus<D, D, A, D, A, D> vbus {
+    DigitalIn(PC_7), 
+    DigitalIn(PC_8), 
+    AnalogIn(PC_9), 
+    DigitalIn(PC_10), 
+    AnalogIn(PC_11), 
+    DigitalIn(PC_12)
+}; 
+
+auto bus = make_vbus(
+    DigitalIn(PC_7), 
+    DigitalIn(PC_8), 
+    AnalogIn(PC_9), 
+    DigitalIn(PC_10), 
+    AnalogIn(PC_11), 
+    DigitalIn(PC_12)
+);
 
 int example_main()
 {
-    Digital digit = pin1;
-    VBus<Digital, Digital, Analog, Digital, Analog, Digital> vbus {pin1, pin2, pin5, pin3, pin6, pin4}; 
+    Digital digit {pin1};
     // variadic bus (aka mixed types)
 
-    Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
+    //Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
     // equivalent to Cached::Bus<Cached::Digital, 4> {pin1 ... }
 
-    Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
+    //Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
     // equivalent to Cached::Bus<Cached::Analog, 4> {pin5 ... }
 
     digit.read();   //  updating cached value
     vbus.read_all(); // updating cached values for the hole bus
 
     while (true) {
-        dbus.read<0, 2, 3>();   // compile-time bound checking 
+       // dbus.read<0, 2, 3>();   // compile-time bound checking 
                                 //(updating cache only for pin1, pin3 and pin4)
                                 
         vbus.read_all();        // updating cached values
+        bus.read_all();
 
-        int d = dbus.get<3>();  // reads cached value (the value of pin2 is never updated)
-        float a = abus.get<1>();
+        //int d = dbus.get<3>();  // reads cached value (the value of pin2 is never updated)
+        //float a = abus.get<1>();
 
         auto vd = vbus.get<3>();  // int
         auto va = vbus.get<4>();  // float
@@ -59,10 +76,10 @@ void calculate(const Cached::DBus<4> &bus) {
 
 int example_main2()
 {
-    Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
+    //Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
     
     while (true) {
-        dbus.read_all();   
-        calculate(dbus);
+     //   dbus.read_all();   
+       // calculate(dbus);
     }
 }
