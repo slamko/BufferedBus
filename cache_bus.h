@@ -6,7 +6,7 @@
 #include <functional>
 
 namespace Cached {
-    #define OUT_OF_BOUNDS_ERROR "error: VBus index out of bounds"
+    #define OUT_OF_BOUNDS_ERROR "error: Bus index out of bounds"
 
     template <class In, class Data>
     class InputRead {
@@ -146,7 +146,7 @@ namespace Cached {
 
     public:
         template <class ...PT>
-        VBus(PT &&... list);
+        VBus(PT &&...list);
 
         VBus(const VBus &) = delete;
         VBus& operator =(const VBus &) = delete;

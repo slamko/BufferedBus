@@ -14,7 +14,9 @@ AnalogIn pin7(PC_10);
 AnalogIn pin8(PC_9);
 
 using namespace Cached;
-VBus<D, D, A, D, A, D> vbus {
+
+// variadic bus (aka mixed types)
+VBus<Digital, Digital, Analog, Digital, Analog, Digital> vbus {
     DigitalIn(PC_7), 
     DigitalIn(PC_8), 
     AnalogIn(PC_9), 
@@ -23,6 +25,7 @@ VBus<D, D, A, D, A, D> vbus {
     DigitalIn(PC_12)
 }; 
 
+// handy helper
 auto bus = make_vbus(
     DigitalIn(PC_7), 
     DigitalIn(PC_8), 
@@ -35,21 +38,21 @@ auto bus = make_vbus(
 int example_main()
 {
     Digital digit {pin1};
-    // variadic bus (aka mixed types)
 
-    //Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
     // equivalent to Cached::Bus<Cached::Digital, 4> {pin1 ... }
+    Cached::DBus<4> dbus {DigitalIn{PC_4}, pin2, pin3, pin4}; 
 
-    //Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
     // equivalent to Cached::Bus<Cached::Analog, 4> {pin5 ... }
+    Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
 
     digit.read();   //  updating cached value
     vbus.read_all(); // updating cached values for the hole bus
 
     while (true) {
-       // dbus.read<0, 2, 3>();   // compile-time bound checking 
-                                //(updating cache only for pin1, pin3 and pin4)
-                                
+        //(updating cache only for pin1, pin3 and pin4)
+        dbus.read<0, 2, 3>();   // compile-time bound checking 
+        dbus.read_all();
+
         vbus.read_all();        // updating cached values
         bus.read_all();
 
@@ -74,12 +77,17 @@ void calculate(const Cached::DBus<4> &bus) {
     // ...
 }
 
+void calculate1(const Cached::DBus<4> &bus) {
+    // ...
+}
+
 int example_main2()
 {
-    //Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
+    Cached::DBus<4> dbus {pin1, pin2, pin3, pin4}; 
     
     while (true) {
-     //   dbus.read_all();   
-       // calculate(dbus);
+        dbus.read_all();  // real read only once in a cycle 
+        calculate(dbus);
+        calculate1(dbus); // using cached values many tymes
     }
 }
