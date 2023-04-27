@@ -46,7 +46,7 @@ int example_main()
     Cached::ABus<4> abus {pin5, pin6, pin7, pin8};
 
     digit.read();   //  updating cached value
-    vbus.read_all(); // updating cached values for the hole bus
+    auto [l1, l2, l3, l4, l5, l6] = vbus.read_all(); // updating cached values for the hole bus
 
     while (true) {
         //(updating cache only for pin1, pin3 and pin4)
@@ -59,6 +59,8 @@ int example_main()
         //int d = dbus.get<3>();  // reads cached value (the value of pin2 is never updated)
         //float a = abus.get<1>();
 
+        //auto l = vbus.get(2);
+        vbus.read<0, 1, 2, 4>();
         auto vd = vbus.get<3>();  // int
         auto va = vbus.get<4>();  // float
         // deducing the type from variadic bus initialization
