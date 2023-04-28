@@ -141,22 +141,10 @@ namespace Cached {
     using ABus = Bus<Analog, N>;
 
     template <size_t N>
-    struct non_nil : std::true_type {};
-    
-    template <>
-    struct non_nil<0> : std::false_type {};
+    using void_if_non_nil = typename std::enable_if_t<N != 0, void>;
 
     template <size_t N>
-    struct nil : std::false_type {};
-    
-    template <>
-    struct nil<0> : std::true_type {};
-
-    template <size_t N>
-    using void_if_non_nil = typename std::enable_if_t<non_nil<N>::value, void>;
-
-    template <size_t N>
-    using void_if_nil = typename std::enable_if_t<nil<N>::value, void>;
+    using void_if_nil = typename std::enable_if_t<N == 0, void>;
 
     template <class T>
     struct assoc_data_type;
@@ -175,7 +163,7 @@ namespace Cached {
     using assoc_data_type_t = typename assoc_data_type<std::remove_reference_t<T>>::type;
 
     template<class ...T>
-    class VBus /*: private NonCopyable<VBus<T...>>*/ {
+    class VBus {
     private:
         std::tuple<T...> list;
 
@@ -192,18 +180,24 @@ namespace Cached {
         using data_bus = std::tuple<assoc_data_type_t<T>...>;
 
         template <size_t ...Ids>
-        using bound_data_bus = std::tuple<assoc_data_type_t<decltype(std::get<Ids>(declval<std::tuple<T...>>()))>...>;
+        using bound_data_bus = std::tuple<assoc_data_type_t<decltype(std::get<Ids>(list))>...>;
 
         template <size_t I>
         auto get();
         
         data_bus read_all(bool inverse_read = false);
 
+        template <bool InverseRead = false, class ...DataArgs>
+        void read_all(DataArgs &... dargs);
+
         template <size_t I>
         auto read(bool inverse_read = false);
 
         template <size_t I, size_t In, size_t ...Index>
         bound_data_bus<I, In, Index...> read(bool inverse_read = false);
+
+        template <size_t ...Index, class ...DataArgs>
+        void read(DataArgs &...dargs);
 
     private:
         template <size_t I>
@@ -279,6 +273,12 @@ namespace Cached {
         data_bus dbus;
         read_all_iter<std::tuple_size<decltype(list)>::value - 1u>(dbus, inverse_read);
         return dbus;
+    }
+
+    template <class ...T>
+    template <bool InverseRead, class ...DataArgs>
+    void VBus<T...>::read_all(DataArgs &...dargs) {
+        std::tie(dargs...) = read_all(InverseRead);
     }
 
     template <class T>
