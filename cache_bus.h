@@ -166,10 +166,14 @@ namespace Cached {
     class VBus {
     private:
         std::tuple<T...> list;
+        bool inverse_read;
 
     public:
         template <class ...PT>
         VBus(PT &&...list);
+        
+        template <class ...PT>
+        VBus(bool inverse_reading = false, PT &&...list);
 
         VBus(const VBus &) = delete;
         VBus& operator =(const VBus &) = delete;
@@ -187,7 +191,7 @@ namespace Cached {
         
         data_bus read_all(bool inverse_read = false);
 
-        template <bool InverseRead = false, class ...DataArgs>
+        template <class ...DataArgs>
         void read_all(DataArgs &... dargs);
 
         template <size_t I>
@@ -198,6 +202,10 @@ namespace Cached {
 
         template <size_t ...Index, class ...DataArgs>
         void read(DataArgs &...dargs);
+
+        void set_inverse_read(bool inverse_read) {
+            this->_inverse_read = inverse_read;
+        }
 
     private:
         template <size_t I>
@@ -217,6 +225,12 @@ namespace Cached {
     template <class ...PT>
     VBus<T...>::VBus(PT &&...list) : list {list...} {}
 
+    template <class ...T>
+    template <class ...PT>
+    VBus<T...>::VBus(bool inverse_read, PT &&...list) : 
+        list {list...}, inverse_read{inverse_read} {}
+
+
         template <class ...T>
     template <size_t I>
     auto VBus<T...>::get() {
@@ -225,19 +239,19 @@ namespace Cached {
 
     template <class ...T>
     template <size_t I>
-    auto VBus<T...>::read(bool inverse_read) {
+    auto VBus<T...>::read(bool) {
         return std::get<I>(list).read(inverse_read);
     }
 
     template <class ...T>
     template <class DBus, size_t I>
-    void VBus<T...>::read_iter(DBus &data, bool inverse_read) {
+    void VBus<T...>::read_iter(DBus &data, bool) {
         std::get<0>(data) = read<I>(inverse_read);
     }
 
     template <class ...T>
     template <class DBus, size_t I, size_t In, size_t ...Index>
-    void VBus<T...>::read_iter(DBus &data, bool inverse_read) {
+    void VBus<T...>::read_iter(DBus &data, bool) {
         auto read_val = std::get<I>(list).read(inverse_read);
         std::get<sizeof...(Index) + 1u>(data) = read_val;
         read_iter<DBus, In, Index...>(data, inverse_read);
@@ -245,7 +259,7 @@ namespace Cached {
 
     template <class ...T>
     template <size_t I, size_t In, size_t ...Index>
-    auto VBus<T...>::read(bool inverse_read) -> bound_data_bus<I, In, Index...> {
+    auto VBus<T...>::read(bool) -> bound_data_bus<I, In, Index...> {
         bound_data_bus<I, In, Index...> dbus;
         read_iter<decltype(dbus), I, In, Index...>(dbus, inverse_read);
         return dbus;
@@ -259,7 +273,7 @@ namespace Cached {
 
     template <class ...T>
     template <size_t I>
-    void_if_nil<I - 1u> VBus<T...>::read_all_iter(data_bus &data, bool inverse_read) {
+    void_if_nil<I - 1u> VBus<T...>::read_all_iter(data_bus &data, bool) {
         auto read_val = read<0>(inverse_read);
         std::get<0>(data) = read_val;
     }
@@ -267,23 +281,23 @@ namespace Cached {
   
     template <class ...T>
     template <size_t I> 
-    void_if_non_nil<I - 1u> VBus<T...>::read_all_iter(data_bus &data, bool inverse_read) {
+    void_if_non_nil<I - 1u> VBus<T...>::read_all_iter(data_bus &data, bool) {
         auto read_val = read<I>(inverse_read);
         std::get<I>(data) = read_val;
         read_all_iter<I - 1u>(data, inverse_read);
     }
 
     template <class ...T>
-    auto VBus<T...>::read_all(bool inverse_read) -> data_bus {
+    auto VBus<T...>::read_all(bool) -> data_bus {
         data_bus dbus;
         read_all_iter<std::tuple_size<decltype(list)>::value - 1u>(dbus, inverse_read);
         return dbus;
     }
 
     template <class ...T>
-    template <bool InverseRead, class ...DataArgs>
+    template <class ...DataArgs>
     void VBus<T...>::read_all(DataArgs &...dargs) {
-        std::tie(dargs...) = read_all(InverseRead);
+        std::tie(dargs...) = read_all(inverse_read);
     }
 
     template <class T>
@@ -303,12 +317,9 @@ namespace Cached {
     using assoc_type_t = typename assoc_type<T>::type;
 
     template <class ...Args>
-    VBus<assoc_type_t<Args>...> make_vbus(Args &&...args) {
-        return VBus<assoc_type_t<Args>...>(args...);
+    VBus<assoc_type_t<Args>...> make_vbus(bool inverse_read = false, Args &&...args) {
+        return VBus<assoc_type_t<Args>...>(inverse_read, args...);
     }
-
-    using D = Digital;
-    using A = Analog;
 }
 
 #endif // CACHE_BUS_H

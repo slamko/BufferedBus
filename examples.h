@@ -18,6 +18,7 @@ using namespace Cached;
 
 // variadic bus (aka mixed types)
 VBus<Digital, Digital, Analog, Digital, Analog, Digital> vbus {
+    true,
     DigitalIn(PC_7), 
     DigitalIn(PC_8), 
     AnalogIn(PC_9), 
@@ -28,6 +29,7 @@ VBus<Digital, Digital, Analog, Digital, Analog, Digital> vbus {
 
 // handy helper
 auto bus = make_vbus(
+    true,
     DigitalIn(PC_7), 
     AnalogIn(PC_4),
     DigitalIn(PC_8), 
@@ -66,7 +68,7 @@ int example_main()
         //auto l = vbus.get(2);
         std::tie(c0, c2, c3) = bus.read<0, 2, 3>();
         bus.read<0, 1, 3>(c0, t1, c2);
-        vbus.read_all<true>(v0, v1, v2, v3, v4, v5);
+        vbus.read_all(v0, v1, v2, v3, v4, v5);
         auto vd = vbus.get<3>();  // int
         auto va = vbus.get<4>();  // float
         // deducing the type from variadic bus initialization
