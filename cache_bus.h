@@ -240,7 +240,6 @@ namespace Cached {
     void VBus<T...>::read_iter(DBus &data, bool inverse_read) {
         auto read_val = std::get<I>(list).read(inverse_read);
         std::get<sizeof...(Index) + 1u>(data) = read_val;
-        //auto temp = std::tuple_cat(data, std::make_tuple(read_val));
         read_iter<DBus, In, Index...>(data, inverse_read);
     }
 
@@ -250,6 +249,12 @@ namespace Cached {
         bound_data_bus<I, In, Index...> dbus;
         read_iter<decltype(dbus), I, In, Index...>(dbus, inverse_read);
         return dbus;
+    }
+
+    template <class ...T>
+    template <size_t ...Indexes, class ...DataArgs>
+    void VBus<T...>::read(DataArgs &...args) {
+        std::tie(args...) = read<Indexes...>();
     }
 
     template <class ...T>

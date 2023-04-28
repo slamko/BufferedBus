@@ -60,10 +60,12 @@ int example_main()
         float a = abus.get<1>();
 
         int c0, c1, c2, c3, c4, c5;
+        float t1;
         int v0, v1, v3, v5;
         float v2, v4;
         //auto l = vbus.get(2);
         std::tie(c0, c2, c3) = bus.read<0, 2, 3>();
+        bus.read<0, 1, 3>(c0, t1, c2);
         vbus.read_all<true>(v0, v1, v2, v3, v4, v5);
         auto vd = vbus.get<3>();  // int
         auto va = vbus.get<4>();  // float
