@@ -2,6 +2,7 @@
 
 #include "mbed.h"
 #include "cache_bus.h"
+#include <tuple>
 
 DigitalIn pin1(PC_12);
 DigitalIn pin2(PC_11);
@@ -28,11 +29,10 @@ VBus<Digital, Digital, Analog, Digital, Analog, Digital> vbus {
 // handy helper
 auto bus = make_vbus(
     DigitalIn(PC_7), 
+    AnalogIn(PC_4),
     DigitalIn(PC_8), 
-    AnalogIn(PC_9), 
-    DigitalIn(PC_10), 
-    AnalogIn(PC_11), 
-    DigitalIn(PC_12)
+    DigitalIn(PC_10),
+    DigitalIn(PC_11) 
 );
 
 int example_main()
@@ -56,11 +56,12 @@ int example_main()
         vbus.read_all();        // updating cached values
         bus.read_all();
 
-        //int d = dbus.get<3>();  // reads cached value (the value of pin2 is never updated)
-        //float a = abus.get<1>();
+        int d = dbus.get<3>();  // reads cached value (the value of pin2 is never updated)
+        float a = abus.get<1>();
 
+        int c0, c1, c2, c3, c4, c5;
         //auto l = vbus.get(2);
-        vbus.read<0, 1, 2, 4>();
+        std::tie(c0, c2, c3) = bus.read<0, 2, 3>();
         auto vd = vbus.get<3>();  // int
         auto va = vbus.get<4>();  // float
         // deducing the type from variadic bus initialization
